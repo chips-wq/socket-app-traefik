@@ -26,8 +26,15 @@ function App() {
 
   // Connect to Socket.IO server on component mount only
   useEffect(() => {
+    // Determine server URL based on environment
+    // In production, we use relative path which will resolve to the same host
+    const socketUrl = process.env.NODE_ENV === 'production' 
+      ? window.location.origin  // Same URL as frontend in production
+      : "http://localhost:5000"; // Development backend URL
+
     // Create a new connection to the backend WebSocket server
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io(socketUrl, {
+      path: "/api/socket", // Use /api/socket path for WebSocket connections
       withCredentials: true,
       transports: ["websocket"],
     });

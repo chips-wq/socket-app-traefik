@@ -9,34 +9,62 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const cors = require("cors");
+const { createClient } = require("redis");
+const { createAdapter } = require("@socket.io/redis-adapter");
 
 // Initialize Express application
 const app = express();
-app.use(cors()); // Enable CORS for all origins to allow cross-domain requests
 
 // Create HTTP server using the Express app
 const server = http.createServer(app);
 
+// Setup Redis clients
+const pubClient = createClient({ 
+  url: process.env.REDIS_URL || "redis://localhost:6379" 
+});
+const subClient = pubClient.duplicate();
+
+// Fatal error handling for Redis connections - fail hard
+pubClient.on("error", (err) => {
+  console.error("FATAL: Redis pubClient error:", err);
+  process.exit(1); // Exit with error code
+});
+
+subClient.on("error", (err) => {
+  console.error("FATAL: Redis subClient error:", err);
+  process.exit(1); // Exit with error code
+});
+
 /**
  * Socket.IO Configuration
  *
- * The Socket.IO server is configured with CORS settings to allow
- * connections from the React frontend. This is essential for cross-origin
- * communication between the frontend and backend.
+ * Path is configured for WebSocket connections in production
  */
 const io = new Server(server, {
-  cors: {
-    origin: "*", // In production, specify exact origin like "http://localhost:3000"
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
+  path: "/api/socket", // Path for WebSocket connections in production
 });
 
-const PORT = process.env.PORT || 5000; // Using 5000 to avoid conflicts with React's default port (3000)
+// Setup Redis adapter after clients are connected - fail hard if it doesn't work
+const setupRedisAdapter = async () => {
+  try {
+    await pubClient.connect();
+    await subClient.connect();
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log("Redis adapter initialized successfully");
+  } catch (err) {
+    console.error("FATAL: Failed to setup Redis adapter:", err);
+    process.exit(1); // Exit with error code
+  }
+}
 
-// Basic route to check if server is running
-app.get("/", (req, res) => {
+// Initialize Redis adapter
+setupRedisAdapter();
+
+const PORT = process.env.PORT || 5000; 
+
+// API routes
+app.use("/api", express.static("public"));
+app.get("/api", (req, res) => {
   res.send("Socket.IO server is running");
 });
 
@@ -119,5 +147,25 @@ io.on("connection", (socket) => {
 // Start the server
 server.listen(PORT, () => {
   console.log(`Socket.IO server listening on *:${PORT}`);
-  console.log(`Visit http://localhost:${PORT} to check server status`);
+  console.log(`Visit http://localhost:${PORT}/api to check server status`);
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  
+  // Close Socket.IO connections
+  io.close(() => {
+    console.log('Socket.IO connections closed');
+  });
+  
+  // Close Redis connections
+  await pubClient.quit();
+  await subClient.quit();
+  
+  // Close HTTP server
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
 });
