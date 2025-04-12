@@ -35,7 +35,6 @@ jobs:
             REDIS_URL=${{ secrets.REDIS_URL }}
 
       - name: Trigger deployment update
-        if: ${{ secrets.DEPLOYMENT_WEBHOOK_URL != '' }}
         run: |
           RESPONSE_CODE=$(curl -X POST -w "%{http_code}" ${{ secrets.DEPLOYMENT_WEBHOOK_URL }})
 
