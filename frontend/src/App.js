@@ -28,9 +28,10 @@ function App() {
   useEffect(() => {
     // Determine server URL based on environment
     // In production, we use relative path which will resolve to the same host
-    const socketUrl = process.env.NODE_ENV === 'production' 
-      ? window.location.origin  // Same URL as frontend in production
-      : "http://localhost:5000"; // Development backend URL
+    const socketUrl =
+      process.env.NODE_ENV === "production"
+        ? window.location.origin // Same URL as frontend in production
+        : "http://localhost:5000"; // Development backend URL
 
     // Create a new connection to the backend WebSocket server
     const newSocket = io(socketUrl, {

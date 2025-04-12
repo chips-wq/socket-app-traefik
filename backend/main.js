@@ -19,8 +19,8 @@ const app = express();
 const server = http.createServer(app);
 
 // Setup Redis clients
-const pubClient = createClient({ 
-  url: process.env.REDIS_URL || "redis://localhost:6379" 
+const pubClient = createClient({
+  url: process.env.REDIS_URL || "redis://localhost:6379",
 });
 const subClient = pubClient.duplicate();
 
@@ -55,12 +55,12 @@ const setupRedisAdapter = async () => {
     console.error("FATAL: Failed to setup Redis adapter:", err);
     process.exit(1); // Exit with error code
   }
-}
+};
 
 // Initialize Redis adapter
 setupRedisAdapter();
 
-const PORT = process.env.PORT || 5000; 
+const PORT = process.env.PORT || 5000;
 
 // API routes
 app.use("/api", express.static("public"));
@@ -151,21 +151,21 @@ server.listen(PORT, () => {
 });
 
 // Handle graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  
+process.on("SIGTERM", async () => {
+  console.log("SIGTERM signal received: closing HTTP server");
+
   // Close Socket.IO connections
   io.close(() => {
-    console.log('Socket.IO connections closed');
+    console.log("Socket.IO connections closed");
   });
-  
+
   // Close Redis connections
   await pubClient.quit();
   await subClient.quit();
-  
+
   // Close HTTP server
   server.close(() => {
-    console.log('HTTP server closed');
+    console.log("HTTP server closed");
     process.exit(0);
   });
 });
