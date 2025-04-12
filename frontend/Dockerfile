@@ -13,21 +13,6 @@ RUN npm ci
 # Copy the rest of the application code
 COPY . .
 
-# Build arguments that will be used as environment variables during the build
-ARG REACT_APP_API_URL
-ARG REACT_APP_SOCKET_PATH
-ARG NODE_ENV
-
-# Set environment variables for the build
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
-ENV REACT_APP_SOCKET_PATH=$REACT_APP_SOCKET_PATH
-ENV NODE_ENV=$NODE_ENV
-
-# Print environment variables for debugging
-RUN echo "REACT_APP_API_URL is: $REACT_APP_API_URL" && \
-    echo "REACT_APP_SOCKET_PATH is: $REACT_APP_SOCKET_PATH" && \
-    echo "NODE_ENV is: $NODE_ENV"
-
 # Build the application
 RUN npm run build
 
