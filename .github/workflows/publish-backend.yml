@@ -36,7 +36,7 @@ jobs:
 
       - name: Trigger deployment update
         run: |
-          RESPONSE_CODE=$(curl -X POST -w "%{http_code}" ${{ secrets.DEPLOYMENT_WEBHOOK_URL }})
+          RESPONSE_CODE=$(curl -X POST -w "%{http_code}" ${{ secrets.BACKEND_DEPLOYMENT_WEBHOOK_URL }})
 
           if [ "$RESPONSE_CODE" -ne 204 ]; then
             echo "Redeployment failed. Response code: $RESPONSE_CODE"

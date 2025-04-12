@@ -26,14 +26,5 @@ RUN npm ci --only=production
 # Copy application code from builder
 COPY --from=builder /app/. .
 
-# Expose the port the app runs on
-EXPOSE 5000
-
-# Environment variables
-ENV NODE_ENV=production
-ENV PORT=5000
-ENV REDIS_URL=redis://redis:6379
-ENV FRONTEND_URL=http://localhost
-
 # Command to run the application
 CMD ["node", "main.js"]
