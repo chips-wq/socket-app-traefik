@@ -17,8 +17,8 @@ jobs:
       - name: Login to Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKER_USERNAME }}
+          registry: ${{ vars.DOCKER_REGISTRY }}
+          username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Docker image
@@ -27,21 +27,9 @@ jobs:
           context: ./frontend
           push: true
           tags: |
-            ${{ secrets.DOCKER_REGISTRY }}/socket-app/frontend:latest
-            ${{ secrets.DOCKER_REGISTRY }}/socket-app/frontend:${{ github.sha }}
+            ${{ vars.DOCKER_REGISTRY }}/socket-app/frontend:latest
+            ${{ vars.DOCKER_REGISTRY }}/socket-app/frontend:${{ github.sha }}
           build-args: |
             REACT_APP_API_URL=${{ vars.REACT_APP_API_URL }}
             REACT_APP_SOCKET_PATH=${{ vars.REACT_APP_SOCKET_PATH }}
             NODE_ENV=production
-
-      - name: Trigger deployment update
-        run: |
-          RESPONSE_CODE=$(curl -X POST -w "%{http_code}" ${{ secrets.FRONTEND_DEPLOYMENT_WEBHOOK_URL }})
-
-          if [ "$RESPONSE_CODE" -ne 204 ]; then
-            echo "Redeployment failed. Response code: $RESPONSE_CODE"
-            echo "##[error]Deployment Failed! Could not automatically redeploy."
-            exit 1
-          else
-            echo "Redeployment successful (HTTP 204)."
-          fi
